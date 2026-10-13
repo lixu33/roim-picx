@@ -1,82 +1,58 @@
 <template>
-  <el-card class="box-card mt-4" v-for="it in imageList" :key="it.key">
-    <template #header>
-      <div class="card-header">
-        <span>{{ it.filename }}</span>
-      </div>
-    </template>
-    <div class="text item">
-      <div class="lg:flex items-center justify-start">
-        <el-image
-            class="block w-48 h-48 lg:mr-6 mb-2 lg:mb-0 mx-auto"
-            :src="it.url"
-            fit="cover"
-            hide-on-click-modal
-            lazy
-            @error="imageError = true"
-            @load="loading = false"
-            :preview-src-list="[it.url]"
-        />
-        <div class="link-list">
-          <div class="w-full mb-2">
-            <label for="htmlLink" class="block text-sm font-medium text-gray-700"> HTML </label>
-            <div class="mt-1">
-              <input id="htmlLink" :value="htmlLink(it.copyUrl, it.filename)" name="htmlLink" class="cursor-pointer focus:node border border-gray-300 flex-1 block w-full rounded-md px-2 py-1" readonly placeholder="html link" @click="copyLink" />
-            </div>
-          </div>
-          <div class="w-full mb-2">
-            <label for="Markdown" class="block text-sm font-medium text-gray-700"> Markdown </label>
-            <div class="mt-1">
-              <input id="Markdown" :value="markdownLink(it.copyUrl, it.filename)" name="Markdown" class="cursor-pointer focus:none border border-gray-300 flex-1 block w-full rounded-md px-2 py-1" readonly placeholder="markdown link" @click="copyLink" />
-            </div>
-          </div>
-          <div class="w-full mb-2">
-            <label for="LINK" class="block text-sm font-medium text-gray-700"> LINK </label>
-            <div class="mt-1">
-              <input id="LINK" :value="it.copyUrl" name="LINK" class="cursor-pointer focus:none border border-gray-300 flex-1 block w-full rounded-md px-2 py-1" placeholder="link" @click="copyLink" readonly />
-            </div>
-          </div>
+  <div class="mt-4 panel p-4" v-for="it in imageList" :key="it.key">
+    <div class="text-sm text-slate-600 font-medium mb-3 truncate">{{ it.filename }}</div>
+    <div class="lg:flex items-start gap-5">
+      <el-image
+        class="block w-40 h-40 rounded-lg bg-slate-100 shrink-0 mb-3 lg:mb-0 mx-auto"
+        :src="it.url"
+        fit="cover"
+        hide-on-click-modal
+        lazy
+        :preview-src-list="[it.url]"
+      />
+      <div class="flex-1 w-full min-w-0">
+        <div class="w-full mb-3" v-for="f in linkFields(it)" :key="f.label">
+          <label class="block text-xs font-medium text-slate-500 mb-1">{{ f.label }}</label>
+          <input
+            :value="f.value"
+            readonly
+            :placeholder="f.label"
+            class="cursor-pointer w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 transition-colors duration-200 hover:border-indigo-300 focus:outline-none focus:border-indigo-400"
+            @click="copyLink(f.value)"
+          />
         </div>
       </div>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <script setup lang="ts">
 import type { ImgItem } from '../utils/types'
 import copy from 'copy-to-clipboard'
-import { ElCard, ElImage, ElMessage } from 'element-plus'
-import { ref } from 'vue'
+
 const props = defineProps<{
   imageList: ImgItem[]
 }>()
-const imageError = ref(false)
-const loading = ref(false)
-const markdownLink = (link: String, filename: String) => {
+
+const markdownLink = (link?: string, filename?: string) => {
   return `![${filename}](${link})`
 }
-const htmlLink = (link: String, filename: String) => {
+const htmlLink = (link?: string, filename?: string) => {
   return `<a href="${link}" target="_blank" title="${filename}"><img src="${link}"></a>`
 }
 
-const copyLink = (event: any) => {
-  // console.log(event.target.value)
-  const res = copy(event.target.value)
-  if (res) {
+const linkFields = (it: ImgItem) => [
+  { label: 'HTML', value: htmlLink(it.copyUrl, it.filename) },
+  { label: 'Markdown', value: markdownLink(it.copyUrl, it.filename) },
+  { label: 'LINK', value: it.copyUrl || '' }
+]
+
+const copyLink = (value: string) => {
+  if (!value) return
+  if (copy(value)) {
     ElMessage.success('链接复制成功')
   } else {
-    ElMessage.success('链接复制失败')
+    ElMessage.error('链接复制失败')
   }
 }
 </script>
-
-<style scoped>
-.link-list {
-  width: calc(100% - 13.5rem);
-}
-@media screen and (max-width: 1024px){
-  .link-list {
-    width: 100%;
-  }
-}
-</style>

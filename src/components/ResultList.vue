@@ -1,20 +1,29 @@
 <template>
-  <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick" type="border-card">
-    <el-tab-pane label="Preview" name="first">
-      <image-item :image-list="imageList" ref="imageItem" />
+  <el-tabs v-model="activeName" type="border-card" class="result-tabs">
+    <el-tab-pane label="预览" name="first">
+      <image-item :image-list="imageList" />
     </el-tab-pane>
     <el-tab-pane label="HTML" name="second">
-      <div class="text-sm text-gray-600 p-2 bg-gray-100 max-w-full overflow-auto whitespace-pre" @click="copyLink">
+      <div
+        class="text-xs text-slate-600 p-3 bg-slate-50 rounded-lg max-w-full overflow-auto whitespace-pre cursor-pointer hover:bg-slate-100 transition-colors duration-200"
+        @click="copyLink"
+      >
         {{ htmlLinks() }}
       </div>
     </el-tab-pane>
     <el-tab-pane label="Markdown" name="third">
-      <div class="text-sm text-gray-600 p-2 bg-gray-100 max-w-full overflow-auto whitespace-pre" @click="copyLink">
+      <div
+        class="text-xs text-slate-600 p-3 bg-slate-50 rounded-lg max-w-full overflow-auto whitespace-pre cursor-pointer hover:bg-slate-100 transition-colors duration-200"
+        @click="copyLink"
+      >
         {{ markdownLinks() }}
       </div>
     </el-tab-pane>
-    <el-tab-pane label="Link" name="fourth">
-      <div class="text-sm text-gray-600 p-2 bg-gray-100 max-w-full overflow-auto whitespace-pre" @click="copyLink">
+    <el-tab-pane label="链接" name="fourth">
+      <div
+        class="text-xs text-slate-600 p-3 bg-slate-50 rounded-lg max-w-full overflow-auto whitespace-pre cursor-pointer hover:bg-slate-100 transition-colors duration-200"
+        @click="copyLink"
+      >
         {{ viewLinks() }}
       </div>
     </el-tab-pane>
@@ -22,63 +31,33 @@
 </template>
 
 <script setup lang="ts">
-import { ElCard, ElImage, ElMessage, ElTabs, ElTabPane } from 'element-plus'
 import { ref } from 'vue'
-import type { TabsPaneContext } from 'element-plus'
 import ImageItem from '../components/ImageItem.vue'
 import type { ImgItem } from '../utils/types'
 import copy from 'copy-to-clipboard'
+
 const props = defineProps<{
   imageList: ImgItem[]
 }>()
 
 const activeName = ref('first')
-const htmlLinks = () => {
-  let text = ''
-  const length = props.imageList.length
-  for(let i = 0; i < length; i++) {
-    const it = props.imageList[i]
-    text += `<a href="${it.url}" target="_blank"><img src="${it.url}"></a>\n`
-  }
-  return text
+
+const buildLinks = (render: (it: ImgItem) => string) => {
+  return props.imageList.map(render).join('\n')
 }
-const viewLinks = () => {
-  let text = ''
-  const length = props.imageList.length
-  for(let i = 0; i < length; i++) {
-    const it = props.imageList[i]
-    text += `${it.url}\n`
-  }
-  return text
-}
-const markdownLinks = () => {
-  let text = ''
-  const length = props.imageList.length
-  for(let i = 0; i < length; i++) {
-    const it = props.imageList[i]
-    text += `![${it.filename}](${it.url})\n`
-  }
-  return text
-}
-const copyLink = (event: any) => {
-  // console.log(event.target.innerText)
-  const res = copy(event.target.innerText)
-  if (res) {
+const htmlLinks = () =>
+  buildLinks((it) => `<a href="${it.copyUrl}" target="_blank"><img src="${it.copyUrl}"></a>`)
+const viewLinks = () =>
+  buildLinks((it) => `${it.copyUrl}`)
+const markdownLinks = () =>
+  buildLinks((it) => `![${it.filename}](${it.copyUrl})`)
+
+const copyLink = (event: MouseEvent) => {
+  const text = (event.target as HTMLElement).innerText
+  if (copy(text)) {
     ElMessage.success('链接复制成功')
   } else {
-    ElMessage.success('链接复制失败')
+    ElMessage.error('链接复制失败')
   }
 }
-const handleClick = (tab: TabsPaneContext, event: Event) => {
-  // console.log(tab, event)
-}
 </script>
-
-<style scoped>
-.demo-tabs > .el-tabs__content {
-  padding: 32px;
-  color: #6b778c;
-  font-size: 32px;
-  font-weight: 600;
-}
-</style>

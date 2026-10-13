@@ -1,50 +1,50 @@
 <template>
 	<el-config-provider :locale="zhCn">
-		<div class="w-full h-screen overflow-x-hidden overflow-y-auto">
+		<div class="w-full h-screen overflow-x-hidden overflow-y-auto bg-slate-50">
 			<el-scrollbar>
-				<div
-					class="w-full h-16 bg-rose-100/50 shadow-sm sticky left-0 top-0 backdrop-blur-sm z-10"
+				<header
+					class="w-full h-16 bg-white/80 border-b border-slate-200/70 sticky left-0 top-0 backdrop-blur-md z-10"
 				>
-					<div class="mx-auto max-w-6xl px-4 h-full flex items-center">
-						<img src="/favicon.png" class="w-8 h-8 block mr-2" />
-						<div class="text-lg">
-							{{ appName }}
-						</div>
+					<div class="mx-auto max-w-6xl px-4 h-full flex items-center gap-3">
+						<img src="/favicon.png" class="w-8 h-8 block rounded-lg" />
+						<span class="text-lg font-semibold text-slate-800 tracking-tight">{{ appName }}</span>
 						<div class="flex-1"></div>
 
-						<div
-							:class="{
-								'bg-rose-300': $route.path === '/up'
-							}"
-							class="px-3 py-2 rounded-md mr-2 text-gray-800 text-sm cursor-pointer"
-							@click="router.push('/up')"
-						>
-							<font-awesome-icon :icon="faUpload" :class="[$route.path === '/up' ? 'text-white' : 'text-gray-500']" />
-							<span class="hidden md:inline-block pl-2">上传</span>
-						</div>
+						<nav class="flex items-center gap-1">
+							<button
+								class="nav-btn"
+								:class="$route.path === '/up'
+									? 'bg-indigo-500 text-white shadow-sm'
+									: 'text-slate-600 hover:bg-slate-100'"
+								@click="router.push('/up')"
+							>
+								<font-awesome-icon :icon="faUpload" />
+								<span class="hidden md:inline-block pl-2">上传</span>
+							</button>
 
-						<div
-							:class="{
-								'bg-rose-300': $route.path === '/'
-							}"
-							class="px-3 py-2 rounded-md text-gray-800 text-sm cursor-pointer"
-							@click="router.push('/')"
-						>
-							<font-awesome-icon :icon="faCog" :class="[$route.path === '/' ? 'text-white' : 'text-gray-500']" />
-							<span class="hidden md:inline-block pl-2">管理</span>
-						</div>
+							<button
+								class="nav-btn"
+								:class="$route.path === '/'
+									? 'bg-indigo-500 text-white shadow-sm'
+									: 'text-slate-600 hover:bg-slate-100'"
+								@click="router.push('/')"
+							>
+								<font-awesome-icon :icon="faCog" />
+								<span class="hidden md:inline-block pl-2">管理</span>
+							</button>
+						</nav>
 					</div>
-				</div>
+				</header>
 
 				<div class="min-h-[calc(100vh-64px-64px)] overflow-auto">
 					<router-view />
 				</div>
 
-				<div class="w-full h-16 flex items-center justify-center text-gray-500 text-sm">
-					<a :href="repoLink" target="_blank" class="underline">
+				<footer class="w-full h-16 flex items-center justify-center text-slate-400 text-sm">
+					<a :href="repoLink" target="_blank" class="hover:text-indigo-500 transition-colors duration-200">
 						{{ repoName }}
 					</a>
-				</div>
+				</footer>
 			</el-scrollbar>
 		</div>
 	</el-config-provider>
@@ -53,7 +53,6 @@
 <script setup lang="ts">
 import { faCog, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { useRouter } from 'vue-router'
-import { ElScrollbar, ElConfigProvider } from 'element-plus'
 import zhCn from "element-plus/es/locale/lang/zh-cn"
 
 const repoLink = 'https://blog.lixu.dev'
