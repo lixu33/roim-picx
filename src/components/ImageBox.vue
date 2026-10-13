@@ -3,11 +3,14 @@
 		<loading-overlay :loading="loading" />
 
 		<el-image
-			class="block w-full h-40 lg:h-56 bg-slate-100"
+			class="block w-full h-40 lg:h-56 bg-slate-100 cursor-zoom-in"
 			:src="src"
 			fit="cover"
 			lazy
 			hide-on-click-modal
+			preview-teleported
+			:preview-src-list="previewSrcList"
+			:initial-index="previewIndex"
 			@load="loading = false"
 			@error="onError"
 		>
@@ -79,7 +82,7 @@ import { faTimesCircle, faTrashAlt, faCopy } from '@fortawesome/free-regular-svg
 import { faImage } from '@fortawesome/free-regular-svg-icons'
 import copy from 'copy-to-clipboard'
 import formatBytes from '../utils/format-bytes'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 
 const props = defineProps<{
@@ -90,10 +93,18 @@ const props = defineProps<{
 	mode: 'converted' | 'uploaded'
 	uploadedAt?: number
 	expiresAt?: number
+	// 预览用的图片列表（不传则只预览自己）
+	previewList?: string[]
+	previewIndex?: number
 }>()
 const emit = defineEmits(['delete'])
 
 const loading = ref(true)
+
+// 点击图片打开大图预览；有列表时可左右切换
+const previewSrcList = computed(() =>
+	props.previewList && props.previewList.length ? props.previewList : [props.src]
+)
 
 // 加载失败也要收起遮罩，否则会一直转
 const onError = () => {

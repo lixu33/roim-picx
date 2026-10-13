@@ -42,7 +42,7 @@
 			<transition-group name="el-fade-in-linear">
 				<div
 					class="col-span-1"
-					v-for="item in uploadedImages"
+					v-for="(item, index) in uploadedImages"
 					:key="item.url"
 				>
 					<image-box
@@ -50,6 +50,8 @@
 						:copyUrl="item.copyUrl"
 						:name="item.key"
 						:size="item.size"
+						:preview-list="previewUrls"
+						:preview-index="index"
 						@delete="deleteImage(item.key)"
 						mode="uploaded"
 					/>
@@ -86,6 +88,8 @@ const hasMore = ref(false)
 const imagesTotalSize = computed(() =>
 	uploadedImages.value.reduce((total, item) => total + item.size, 0)
 )
+// 大图预览的列表：当前目录已加载的图片，点开后可左右切换
+const previewUrls = computed(() => uploadedImages.value.map((item) => item.url))
 
 const changeFolder = (path: string) => {
 	if (path === delimiter.value) return
