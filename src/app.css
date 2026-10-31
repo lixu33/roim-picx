@@ -16,7 +16,7 @@ body {
 	}
 
 	.nav-btn {
-		@apply px-3 py-2 rounded-lg text-sm inline-flex items-center justify-center cursor-pointer transition-colors duration-200;
+		@apply px-3 py-2.5 rounded-lg text-sm inline-flex items-center justify-center cursor-pointer transition-colors duration-200;
 	}
 
 	.panel {
@@ -24,6 +24,11 @@ body {
 	}
 
 	.icon-btn {
-		@apply w-9 h-9 rounded-lg border border-slate-200 bg-white text-slate-500 inline-flex items-center justify-center cursor-pointer transition-colors duration-200 hover:text-indigo-500 hover:border-indigo-300;
+		@apply w-10 h-10 rounded-lg border border-slate-200 bg-white text-slate-500 inline-flex items-center justify-center cursor-pointer transition-colors duration-200 hover:text-indigo-500 hover:border-indigo-300;
+	}
+
+	/* iOS 安全区：全屏滚动页贴边内容避开刘海/Home 条 */
+	.safe-bottom {
+		padding-bottom: env(safe-area-inset-bottom);
 	}
 }

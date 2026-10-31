@@ -4,8 +4,9 @@
 			<el-scrollbar>
 				<header
 					class="w-full h-16 bg-white/80 border-b border-slate-200/70 sticky left-0 top-0 backdrop-blur-md z-10"
+					style="padding-top: env(safe-area-inset-top)"
 				>
-					<div class="mx-auto max-w-6xl px-4 h-full flex items-center gap-3">
+					<div class="mx-auto max-w-6xl px-3 sm:px-4 h-full flex items-center gap-2 sm:gap-3">
 						<img src="/favicon.png" class="w-8 h-8 block rounded-lg" />
 						<span class="text-lg font-semibold text-slate-800 tracking-tight">{{ appName }}</span>
 						<div class="flex-1"></div>
@@ -40,7 +41,9 @@
 					<router-view />
 				</div>
 
-				<footer class="w-full h-16 flex items-center justify-center text-slate-400 text-sm">
+				<footer
+					class="w-full h-16 flex items-center justify-center text-slate-400 text-sm safe-bottom"
+				>
 					<a :href="repoLink" target="_blank" class="hover:text-indigo-500 transition-colors duration-200">
 						{{ repoName }}
 					</a>
