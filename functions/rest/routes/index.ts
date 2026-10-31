@@ -297,7 +297,11 @@ router.get("/:id+", async (req: Request, env: Env, ctx?: { waitUntil: (p: Promis
     // 只缓存完整 200（cache.put 不接受 206/304）；clone() 内部 tee 流，不影响返回体
     if (status === 200 && ctx) {
         response.headers.set('x-cache', 'miss')
-        ctx.waitUntil(caches.default.put(req, response.clone()))
+        try {
+            await caches.default.put(req, response.clone())
+        } catch (e) {
+            response.headers.set('x-cache-err', (e as Error).message.slice(0, 80))
+        }
     }
     return response
 })
