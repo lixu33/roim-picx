@@ -27,8 +27,7 @@ export const onRequest: PagesFunction<Env> = async (context : EventContext) => {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    // 第三个参数把 EventContext 透传给路由（图片 GET 用 ctx.waitUntil 写边缘缓存）
-    const response: Response | undefined = await router.handle(context.request, context.env, context);
+    const response: Response | undefined = await router.handle(context.request, context.env);
     return withSecurityHeaders(response ?? error(404, 'not found'));
   } catch (err) {
     // 内部错误只回通用文案，细节留在日志里，避免泄露实现信息
