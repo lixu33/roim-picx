@@ -299,6 +299,8 @@ router.get("/:id+", async (req: Request, env: Env, ctx?: { waitUntil: (p: Promis
         response.headers.set('x-cache', 'miss')
         try {
             await caches.default.put(req, response.clone())
+            const self = await caches.default.match(req)
+            response.headers.set('x-cache-self', self ? 'stored' : 'absent')
         } catch (e) {
             response.headers.set('x-cache-err', (e as Error).message.slice(0, 80))
         }
