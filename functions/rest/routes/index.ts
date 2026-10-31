@@ -200,8 +200,15 @@ router.post("/folder", auth, async (req: Request, env: Env) => {
     }
 })
 
+// 删除成功后清边缘缓存：图不可变缓存了一年，不清的话删了还能从 CF 节点读到旧图
+const purgeEdgeCache = (req: Request, ctx: { waitUntil: (p: Promise<unknown>) => void } | undefined, keys: string[]) => {
+    if (!ctx) return
+    const urls = keys.map(k => new URL(`/rest/${k}`, req.url).toString())
+    ctx.waitUntil(Promise.all(urls.map(u => caches.default.delete(u))))
+}
+
 // 删除key（显式鉴权：GET 在 auth 中间件里是放行的，这个路由必须自己校验）
-router.get('/del/:id+', async (req: Request, env: Env) => {
+router.get('/del/:id+', async (req: Request, env: Env, ctx?: { waitUntil: (p: Promise<unknown>) => void }) => {
     if (!isTokenValid(req, env)) {
         return json(NotAuth())
     }
@@ -215,11 +222,12 @@ router.get('/del/:id+', async (req: Request, env: Env) => {
         console.log(`img delete error:${(e as Error).message}`)
         return json(Fail("delete fail"))
     }
+    purgeEdgeCache(req, ctx, [key])
     return json(Ok(key))
 })
 
 // delete image
-router.delete("/", auth, async (req: Request, env: Env) => {
+router.delete("/", auth, async (req: Request, env: Env, ctx?: { waitUntil: (p: Promise<unknown>) => void }) => {
     const params = await req.json() as { keys?: string }
     const keys = params && params.keys;
     if (!keys || typeof keys !== 'string' || keys.length < 1) {
@@ -236,14 +244,32 @@ router.delete("/", auth, async (req: Request, env: Env) => {
         console.log(`img delete error:${(e as Error).message}`)
         return json(Fail("delete fail"))
     }
+    purgeEdgeCache(req, ctx, targets)
     return json(Ok(keys))
 })
 
 // image detail（公开读取：图床要能被外部引用）
-router.get("/:id+", async (req: Request, env: Env) => {
+// functions/** 被 tsconfig 排除（Pages 只用 esbuild 转译），DOM lib 的 CacheStorage
+// 没有 default，这里按 Workers 运行时补环境声明，仅消 IDE 诊断
+declare const caches: { default: Cache }
+router.get("/:id+", async (req: Request, env: Env, ctx?: { waitUntil: (p: Promise<unknown>) => void }) => {
     const id = (req as { params?: { id?: string } }).params?.id
     if (!isSafeKey(id)) {
         return json(Fail("object not found"))
+    }
+    // key 含时间戳+随机串 = 内容不可变 → 同一 CF 节点的重复读直接命中边缘缓存，
+    // 不再走 Worker→R2 往返（砍 TTFB，也省 Class B 操作数）。
+    // 只对「无条件、无 Range 的普通 GET」启用：Cache API 不做条件协商也不懂 Range，
+    // 对这两类请求回 200 全量会破坏 304/206 语义，必须继续走 R2 的 onlyIf/range 路径。
+    const conditional = req.headers.has('if-none-match') || req.headers.has('if-modified-since') || req.headers.has('range')
+    if (!conditional) {
+        const cached = await caches.default.match(req)
+        if (cached) {
+            // 缓存返回的 Response 头是 immutable guard，不能原地改；用副本加标记
+            const hit = new Response(cached.body, cached)
+            hit.headers.set('x-cache', 'hit')
+            return hit
+        }
     }
     const range = parseRange(req.headers.get('range'))
     const object = await env.R2.get(id, {
@@ -256,15 +282,22 @@ router.get("/:id+", async (req: Request, env: Env) => {
     const headers = new Headers()
     object.writeHttpMetadata(headers)
     headers.set('etag', object.httpEtag)
-    // key 里带时间戳+随机串，内容不可变 → 让浏览器与 CF 边缘长期缓存，避免每次都回源 R2
+    // 浏览器与 CF 边缘长期缓存
     headers.set('cache-control', 'public, max-age=31536000, immutable')
     headers.set('x-content-type-options', 'nosniff')
+    headers.set('accept-ranges', 'bytes')
     if (range) {
         headers.set("content-range", `bytes ${range.offset}-${range.end}/${object.size}`)
     }
     const status = object.body ? (range ? 206 : 200) : 304
-    return new Response(object.body, {
+    const response = new Response(object.body, {
         headers,
         status
     })
+    // 只缓存完整 200（cache.put 不接受 206/304）；clone() 内部 tee 流，不影响返回体
+    if (status === 200 && ctx) {
+        response.headers.set('x-cache', 'miss')
+        ctx.waitUntil(caches.default.put(req, response.clone()))
+    }
+    return response
 })
