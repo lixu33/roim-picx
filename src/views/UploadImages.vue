@@ -78,6 +78,7 @@
 import { faImages, faTrashAlt, faImage } from '@fortawesome/free-regular-svg-icons'
 import { faUpload, faPaste } from '@fortawesome/free-solid-svg-icons'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { pngToLosslessWebp } from '../utils/webp'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 import formatBytes from '../utils/format-bytes'
 import { requestUploadImages } from '../utils/request'
@@ -179,11 +180,24 @@ const appendConvertedImages = async (files: FileList | null | undefined) => {
 			continue
 		}
 
+		// PNG 先无损转 WebP（wasm 像素级一致），失败或转完更大则保留原文件
+		let uploadFile: File = file
+		if (file.type === 'image/png') {
+			const converted = await pngToLosslessWebp(file)
+			if (converted) {
+				uploadFile = converted
+				ElNotification({
+					message: `${file.name} 无损转 WebP：${formatBytes(file.size)} → ${formatBytes(converted.size)}`,
+					type: 'success'
+				})
+			}
+		}
+
 		convertedImages.value = [
 			...convertedImages.value,
 			{
-				file,
-				tmpSrc: URL.createObjectURL(file)
+				file: uploadFile,
+				tmpSrc: URL.createObjectURL(uploadFile)
 			}
 		]
 	}
