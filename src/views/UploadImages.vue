@@ -36,35 +36,51 @@
 		</div>
 
 		<div
-			class="w-full rounded-xl shadow-sm border border-slate-100 bg-white overflow-hidden mt-4 p-3 flex flex-wrap items-center gap-2"
+			class="w-full rounded-xl shadow-sm border border-slate-100 bg-white overflow-hidden mt-4 p-3 flex flex-col md:flex-row md:items-center md:flex-wrap gap-2"
 		>
-			<button class="action-btn bg-indigo-500 hover:bg-indigo-600" :class="{ 'area-disabled': loading }"
-				@click="input?.click()">
+			<button
+				class="action-btn bg-indigo-500 hover:bg-indigo-600 w-full md:w-auto justify-center"
+				:class="{ 'area-disabled': loading }"
+				@click="input?.click()"
+			>
 				<font-awesome-icon :icon="faImages" />
 				选择图片
 			</button>
 
-			<div class="flex-1 min-w-[8rem] text-sm text-slate-500 px-2 text-center md:text-left">
+			<div
+				class="order-3 md:order-none text-xs md:text-sm text-slate-500 px-2 text-center md:text-left md:flex-1 md:min-w-[8rem]"
+			>
 				已选择 {{ convertedImages.length }} 张，共 {{ formatBytes(imagesTotalSize) }}
 			</div>
 
-			<button class="action-btn bg-slate-400 hover:bg-slate-500" :class="{ 'area-disabled': loading }"
-				@click="clearInput">
-				<font-awesome-icon :icon="faTrashAlt" />
-				清除
-			</button>
+			<div class="grid grid-cols-3 gap-2 md:flex md:items-center md:gap-2">
+				<button
+					class="action-btn bg-slate-400 hover:bg-slate-500 w-full md:w-auto justify-center"
+					:class="{ 'area-disabled': loading }"
+					@click="clearInput"
+				>
+					<font-awesome-icon :icon="faTrashAlt" />
+					清除
+				</button>
 
-			<button class="action-btn bg-sky-500 hover:bg-sky-600" :class="{ 'area-disabled': loading }"
-				@click="clipboardUpload">
-				<font-awesome-icon :icon="faPaste" />
-				上传剪切板
-			</button>
+				<button
+					class="action-btn bg-sky-500 hover:bg-sky-600 w-full md:w-auto justify-center"
+					:class="{ 'area-disabled': loading }"
+					@click="clipboardUpload"
+				>
+					<font-awesome-icon :icon="faPaste" />
+					上传剪切板
+				</button>
 
-			<button class="action-btn bg-emerald-500 hover:bg-emerald-600"
-				:class="{ 'area-disabled': convertedImages.length === 0 || loading }" @click="uploadImages">
-				<font-awesome-icon :icon="faUpload" />
-				上传
-			</button>
+				<button
+					class="action-btn bg-emerald-500 hover:bg-emerald-600 w-full md:w-auto justify-center"
+					:class="{ 'area-disabled': convertedImages.length === 0 || loading }"
+					@click="uploadImages"
+				>
+					<font-awesome-icon :icon="faUpload" />
+					上传
+				</button>
+			</div>
 		</div>
 
 		<result-list v-show="imgResultList && imgResultList.length" :image-list="imgResultList" ref="resultList"
